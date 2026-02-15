@@ -1,50 +1,33 @@
 # treemux
 
-Small tmux session helper for root/child session trees.
+`treemux` is a small tmux session helper for root/child session trees. It provides commands to manage
+tmux sessions in a hierarchical manner, allowing you to organize your sessions based on their root
+directories.
 
 ## Commands
 
-### ensure-root
+### attach
 
-Create a root session rooted at a directory.
+Attach to a tmux session, creating it if it doesn't exist.
 
-```
-treemux ensure-root <root-name> [root-dir]
-```
+ARGS
 
-Behavior
-- normalizes the root dir to an absolute path (defaults to the current directory)
-- creates the root session if missing
-- stores @tree_root_dir and @tree_root_name on the root session
-- prints a result message
+`--rooted-at <root-name>`:                Attach to a child session rooted at the specified root
+                                          session.
 
-### ensure-child
+`--cmd <command>`:                        Command to run in the session. If not specified, the
+                                          session will start with the default shell.
 
-Create a child session under the current root.
+`-d --dir <directory>`:                   Starting directory for the session. If not specified, it
+                                          will inherit from the root session (for child sessions) or
+                                          use the current directory (for root sessions).
 
-```
-treemux ensure-child <child-name> <command>
-```
+`-w --worktree <worktree/branch>`:        If specified, the session will be rooted at the given git
+                                          worktree directory. If the worktree did not exist for the
+                                          specified branch, it will be created. If `-d` is not
+                                          specified, it will be rooted at .worktrees/<branch>.
 
-Behavior
-- requires running inside tmux
-- reads @tree_root_dir and @tree_root_name from the current session
-- creates the child session if missing
-- stores @tree_root_dir and @tree_root_name on the child session
-- prints a result message
+### show
 
-### show-root
-
-Print the current root session name.
-
-```
-treemux show-root
-```
-
-Behavior
-- requires running inside tmux
-- reads @tree_root_name from the current session
-
-## Environment
-
-- TMUX_TREE_SEPARATOR: child separator for session names (default: " 🌿 ")
+Prints a fzf-friendly list of tmux sessions, with root sessions and their child sessions grouped
+together.
