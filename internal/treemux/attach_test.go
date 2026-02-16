@@ -5,14 +5,15 @@ import (
 	"testing"
 )
 
-func TestResolveRootDirPrefersDir(t *testing.T) {
+func TestAttachRootRejectsDirAndWorktree(t *testing.T) {
 	app := New()
-	result, err := app.resolveRootDir("/tmp/example", "branch")
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	if result != "/tmp/example" {
-		t.Fatalf("expected dir to be returned, got %q", result)
+	err := app.AttachRoot(AttachRootRequest{
+		Name:     "example",
+		Dir:      "/tmp/example",
+		Worktree: "branch",
+	})
+	if err == nil {
+		t.Fatalf("expected error, got nil")
 	}
 }
 

@@ -8,6 +8,9 @@ import (
 
 // AttachRoot ensures and attaches to a root session.
 func (a *App) AttachRoot(req AttachRootRequest) error {
+	if req.Dir != "" && req.Worktree != "" {
+		return fmt.Errorf("--dir and --worktree are mutually exclusive")
+	}
 	rootDir, err := a.resolveRootDir(req.Dir, req.Worktree)
 	if err != nil {
 		return err

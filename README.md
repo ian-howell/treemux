@@ -16,13 +16,15 @@ ARGS
 `--name <root-name>`:                     Root session name. If not specified, it is derived from
                                           the session directory.
 
-`-d --dir <directory>`:                   Starting directory for the session. If not specified, it
-                                          uses the current directory.
+`-d --dir <directory>`:                   Starting directory for the session. Mutually exclusive
+                                          with `-w --worktree`. If not specified, it uses the
+                                          current directory.
 
-`-w --worktree <worktree/branch>`:        If specified, the session will be rooted at the given git
+`-w --worktree <worktree/branch>`:        Mutually exclusive with `-d --dir`. If specified, the
+                                          session will be rooted at the given git
                                           worktree directory. If the worktree did not exist for the
-                                          specified branch, it will be created. If `-d` is not
-                                          specified, it will be rooted at .worktrees/<branch>.
+                                           specified branch, it will be created. If `-d` is not
+                                           specified, it will be rooted at .worktrees/<branch>.
                                           If `-d` is specified, the worktree will be created at that
                                           directory.
 
