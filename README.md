@@ -6,22 +6,6 @@ directories.
 
 ## Commands
 
-### --help
-
-```
-treemux --help
-
-Usage: treemux <command>
-
-Commands:
-  attach-root     Attach to a root session, creating it if it doesn't exist.
-  attach-child    Attach to a child session rooted at the specified root.
-  show-roots      Show a list of treemux root sessions.
-  show-children   Show child sessions for a root.
-
-Run "treemux <command> --help" for more information.
-```
-
 ### attach-root
 
 Attach to a root tmux session, creating it if it doesn't exist. Works from both inside and outside
@@ -84,7 +68,6 @@ current session. Use `--sort-by=most-recently-used` to order by most recently at
 Example output:
 
 ```
-  root-a
   child-1
   child-2
 * child-3
