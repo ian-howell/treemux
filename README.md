@@ -8,7 +8,8 @@ directories.
 
 ### attach
 
-Attach to a tmux session, creating it if it doesn't exist.
+Attach to a tmux session, creating it if it doesn't exist. Works from both inside and outside of
+tmux sessions.
 
 ARGS
 
