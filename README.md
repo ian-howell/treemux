@@ -21,12 +21,10 @@ ARGS
                                           current directory.
 
 `-w --worktree <worktree/branch>`:        Mutually exclusive with `-d --dir`. If specified, the
-                                          session will be rooted at the given git
-                                          worktree directory. If the worktree did not exist for the
-                                           specified branch, it will be created. If `-d` is not
-                                           specified, it will be rooted at .worktrees/<branch>.
-                                          If `-d` is specified, the worktree will be created at that
-                                          directory.
+                                          session will be rooted at the given git worktree
+                                          directory. If the worktree did not exist for the
+                                          specified branch, it will be created. The default root
+                                          directory is `<repo>/.worktrees/<branch>`.
 
 ### attach-child
 
