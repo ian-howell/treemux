@@ -53,29 +53,15 @@ func TestEnsureBranchTracksRemoteBranch(t *testing.T) {
 	}
 }
 
-func TestEnsureWorktreeAddsGitignoreEntry(t *testing.T) {
-	repo := newTestRepo(t)
-	branch := "worktree-gitignore"
-	path := filepath.Join(repo, ".worktrees", branch)
-	if err := git.EnsureWorktree(repo, branch, path); err != nil {
-		t.Fatalf("expected worktree creation, got %v", err)
-	}
-	contents, err := os.ReadFile(filepath.Join(repo, ".gitignore"))
-	if err != nil {
-		t.Fatalf("expected .gitignore to exist, got %v", err)
-	}
-	if !strings.Contains(string(contents), ".worktree") {
-		t.Fatalf("expected .gitignore to include .worktree entry")
-	}
-}
-
 func newTestRepo(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	if err := runGit(dir, "init"); err != nil {
 		t.Fatalf("git init failed: %v", err)
 	}
-	_ = runGit(dir, "remote", "remove", "origin")
+	if err := runGit(dir, "remote", "remove", "origin"); err != nil {
+		// ignore if origin doesn't exist
+	}
 	if err := os.WriteFile(filepath.Join(dir, "README.md"), []byte("test"), 0o644); err != nil {
 		t.Fatalf("write file failed: %v", err)
 	}

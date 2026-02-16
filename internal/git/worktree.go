@@ -40,9 +40,6 @@ func EnsureWorktree(repoRoot, branch, path string) error {
 	if _, err := runGit(repoRoot, "worktree", "add", path, branch); err != nil {
 		return fmt.Errorf("failed to create worktree: %w", err)
 	}
-	if err := ensureGitignoreWorktree(repoRoot); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -152,33 +149,6 @@ func firstRemoteWithBranch(repoRoot, branch string) (string, error) {
 		}
 	}
 	return "", nil
-}
-
-func ensureGitignoreWorktree(repoRoot string) error {
-	const (
-		ignoreEntry  = ".worktree"
-		commentEntry = "# Added by treemux worktree creation"
-	)
-	path := filepath.Join(repoRoot, ".gitignore")
-	contents, err := os.ReadFile(path)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed to read .gitignore: %w", err)
-	}
-	lines := strings.Split(string(contents), "\n")
-	for _, line := range lines {
-		if strings.TrimSpace(line) == ignoreEntry {
-			return nil
-		}
-	}
-	if len(lines) > 0 && lines[len(lines)-1] != "" {
-		lines = append(lines, "")
-	}
-	lines = append(lines, commentEntry, ignoreEntry)
-	updated := strings.Join(lines, "\n")
-	if err := os.WriteFile(path, []byte(updated), 0o644); err != nil {
-		return fmt.Errorf("failed to update .gitignore: %w", err)
-	}
-	return nil
 }
 
 // runGit executes git with the provided arguments.
