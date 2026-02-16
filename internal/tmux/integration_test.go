@@ -9,9 +9,9 @@ import (
 	"testing"
 )
 
-// TestMain skips integration tests unless TREEMUX_TMUX is set.
+// TestMain skips integration tests unless TREEMUX_INTEGRATION is set.
 func TestMain(m *testing.M) {
-	if os.Getenv("TREEMUX_TMUX") == "" {
+	if os.Getenv("TREEMUX_INTEGRATION") == "" {
 		os.Exit(0)
 	}
 	os.Exit(m.Run())

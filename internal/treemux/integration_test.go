@@ -34,8 +34,8 @@ func cleanupSession(t *testing.T, name string) {
 }
 
 func TestIntegration(t *testing.T) {
-	if os.Getenv("TREEMUX_TMUX") == "" {
-		t.Skip("requires TREEMUX_TMUX")
+	if os.Getenv("TREEMUX_INTEGRATION") == "" {
+		t.Skip("requires TREEMUX_INTEGRATION")
 	}
 
 	t.Run("show-roots-mru", func(t *testing.T) {
