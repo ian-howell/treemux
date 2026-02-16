@@ -3,11 +3,16 @@ package treemux
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 // AttachRoot ensures and attaches to a root session.
 func (a *App) AttachRoot(req AttachRootRequest) error {
+	if isWhitespaceOnly(req.Name) {
+		return fmt.Errorf("root session name cannot be blank")
+	}
+	if isWhitespaceOnly(req.Dir) {
+		return fmt.Errorf("dir cannot be blank")
+	}
 	if req.Dir != "" && req.Worktree != "" {
 		return fmt.Errorf("--dir and --worktree are mutually exclusive")
 	}
@@ -59,6 +64,12 @@ func (a *App) AttachRoot(req AttachRootRequest) error {
 
 // AttachChild ensures and attaches to a child session.
 func (a *App) AttachChild(req AttachChildRequest) error {
+	if isWhitespaceOnly(req.Name) {
+		return fmt.Errorf("child session name cannot be blank")
+	}
+	if isWhitespaceOnly(req.Command) {
+		return fmt.Errorf("command cannot be blank")
+	}
 	rootName, err := a.resolveChildRoot(req.Root)
 	if err != nil {
 		return err
@@ -113,6 +124,9 @@ func (a *App) AttachChild(req AttachChildRequest) error {
 
 // resolveChildRoot determines the root session name for a child attach.
 func (a *App) resolveChildRoot(root string) (string, error) {
+	if isWhitespaceOnly(root) {
+		return "", fmt.Errorf("root session name cannot be blank")
+	}
 	rootName := sanitizeSessionName(root)
 	if rootName != "" {
 		return rootName, nil
@@ -124,7 +138,6 @@ func (a *App) resolveChildRoot(root string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	current = strings.TrimSpace(current)
 	if current == "" {
 		return "", fmt.Errorf("failed to determine current tmux session")
 	}
@@ -132,7 +145,6 @@ func (a *App) resolveChildRoot(root string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	rootName = strings.TrimSpace(rootName)
 	if rootName == "" {
 		return "", fmt.Errorf("current session is not a treemux session")
 	}
@@ -157,7 +169,6 @@ func (a *App) resolveRootDir(dir, worktree string) (string, error) {
 
 // commandArgs builds a command invocation for tmux.
 func commandArgs(command string) []string {
-	command = strings.TrimSpace(command)
 	if command == "" {
 		return nil
 	}

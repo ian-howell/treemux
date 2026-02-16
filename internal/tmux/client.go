@@ -43,10 +43,13 @@ func (c *Client) ListSessions() ([]string, error) {
 		}
 		return nil, err
 	}
-	lines := strings.Split(strings.TrimSpace(output), "\n")
+	output = strings.TrimSpace(output)
+	if output == "" {
+		return []string{}, nil
+	}
+	lines := strings.Split(output, "\n")
 	names := make([]string, 0, len(lines))
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
@@ -107,5 +110,9 @@ func (c *Client) IsInsideTmux() bool {
 
 // CurrentSessionName returns the attached tmux session name.
 func (c *Client) CurrentSessionName() (string, error) {
-	return gotmux.GetAttachedSessionName()
+	name, err := gotmux.GetAttachedSessionName()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(name), nil
 }

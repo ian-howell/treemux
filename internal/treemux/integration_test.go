@@ -19,7 +19,7 @@ func cleanupSession(t *testing.T, name string) {
 	cmd := exec.Command("tmux", "kill-session", "-t", name)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		stderr := strings.TrimSpace(string(output))
+		stderr := string(output)
 		if strings.Contains(stderr, "can't find session") {
 			return
 		}

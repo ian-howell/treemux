@@ -3,7 +3,6 @@ package treemux
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/ian-howell/treemux/internal/git"
 )
@@ -13,14 +12,14 @@ func resolveWorktree(branch string) (string, error) {
 	if branch == "" {
 		return "", fmt.Errorf("missing worktree branch")
 	}
+	if isWhitespaceOnly(branch) {
+		return "", fmt.Errorf("worktree branch cannot be blank")
+	}
 	root, err := git.RepositoryRoot("")
 	if err != nil {
 		return "", err
 	}
-	name := strings.TrimSpace(branch)
-	if name == "" {
-		return "", fmt.Errorf("missing worktree branch")
-	}
+	name := branch
 	path := filepath.Join(root, ".worktrees", name)
 	if err := git.EnsureWorktree(root, name, path); err != nil {
 		return "", err
@@ -34,9 +33,12 @@ func worktreeDefaultPath(branch string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	name := strings.TrimSpace(branch)
-	if name == "" {
+	if branch == "" {
 		return "", fmt.Errorf("missing worktree branch")
 	}
+	if isWhitespaceOnly(branch) {
+		return "", fmt.Errorf("worktree branch cannot be blank")
+	}
+	name := branch
 	return filepath.Join(root, ".worktrees", name), nil
 }

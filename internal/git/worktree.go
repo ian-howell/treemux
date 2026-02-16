@@ -16,11 +16,10 @@ func RepositoryRoot(dir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("not inside a git repository")
 	}
-	root := strings.TrimSpace(output)
-	if root == "" {
+	if output == "" {
 		return "", fmt.Errorf("not inside a git repository")
 	}
-	return root, nil
+	return output, nil
 }
 
 // EnsureWorktree creates a worktree if it does not already exist.
@@ -45,9 +44,11 @@ func EnsureWorktree(repoRoot, branch, path string) error {
 
 // EnsureBranch ensures a local branch exists, creating or tracking as needed.
 func EnsureBranch(repoRoot, branch string) error {
-	branch = strings.TrimSpace(branch)
 	if repoRoot == "" || branch == "" {
 		return fmt.Errorf("missing branch parameters")
+	}
+	if strings.TrimSpace(branch) == "" {
+		return fmt.Errorf("branch cannot be blank")
 	}
 	if ok, err := hasLocalBranch(repoRoot, branch); err != nil {
 		return err
@@ -106,10 +107,12 @@ func listRemotes(repoRoot string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	lines := strings.Split(strings.TrimSpace(output), "\n")
+	if output == "" {
+		return []string{}, nil
+	}
+	lines := strings.Split(output, "\n")
 	remotes := make([]string, 0, len(lines))
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
@@ -167,5 +170,5 @@ func runGit(dir string, args ...string) (string, error) {
 		}
 		return "", fmt.Errorf("git %s: %s", strings.Join(args, " "), errText)
 	}
-	return stdout.String(), nil
+	return strings.TrimSpace(stdout.String()), nil
 }

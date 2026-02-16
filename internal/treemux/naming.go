@@ -15,7 +15,9 @@ const (
 
 // sanitizeSessionName normalizes names to be tmux-safe.
 func sanitizeSessionName(name string) string {
-	name = strings.TrimSpace(name)
+	if isWhitespaceOnly(name) {
+		return ""
+	}
 	for strings.HasPrefix(name, ".") {
 		name = strings.TrimPrefix(name, ".")
 	}

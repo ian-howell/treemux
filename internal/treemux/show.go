@@ -66,7 +66,6 @@ func (a *App) ShowChildren(req ShowChildrenRequest) ([]string, error) {
 	currentSession := ""
 	if a.isInsideTmux() {
 		currentSession, _ = a.currentSessionName()
-		currentSession = strings.TrimSpace(currentSession)
 	}
 	childEntries := make([]sessionInfo, 0, len(children[rootName]))
 	for _, info := range children[rootName] {
@@ -130,10 +129,8 @@ func (a *App) collectSessions() (map[string]sessionInfo, map[string][]sessionInf
 	if a.isInsideTmux() {
 		currentSession, err := a.currentSessionName()
 		if err == nil {
-			currentSession = strings.TrimSpace(currentSession)
 			if currentSession != "" {
 				currentRoot, _ = a.tmux.ShowOption(currentSession, rootNameOption)
-				currentRoot = strings.TrimSpace(currentRoot)
 			}
 		}
 	}
@@ -141,7 +138,7 @@ func (a *App) collectSessions() (map[string]sessionInfo, map[string][]sessionInf
 }
 
 func sortSessions(entries []sessionInfo, sortBy string) []sessionInfo {
-	mode := strings.TrimSpace(strings.ToLower(sortBy))
+	mode := strings.ToLower(sortBy)
 	switch mode {
 	case "most-recently-used", "mru":
 		sort.Slice(entries, func(i, j int) bool {
@@ -160,7 +157,10 @@ func sortSessions(entries []sessionInfo, sortBy string) []sessionInfo {
 
 // validateSortBy ensures the sort mode is recognized.
 func validateSortBy(sortBy string) error {
-	mode := strings.TrimSpace(strings.ToLower(sortBy))
+	if isWhitespaceOnly(sortBy) {
+		return fmt.Errorf("sort mode cannot be blank")
+	}
+	mode := strings.ToLower(sortBy)
 	switch mode {
 	case "", "alphabetic", "most-recently-used", "mru":
 		return nil
@@ -172,7 +172,6 @@ func validateSortBy(sortBy string) error {
 func childLabel(rootName, sessionName string) string {
 	separator := tmuxSeparator()
 	childName := strings.TrimPrefix(sessionName, rootName+separator)
-	childName = strings.TrimSpace(childName)
 	if childName == "" {
 		return sessionName
 	}
@@ -184,7 +183,6 @@ func readLastUsed(client *tmux.Client, session string) int64 {
 	if err != nil {
 		return 0
 	}
-	value = strings.TrimSpace(value)
 	if value == "" {
 		return 0
 	}

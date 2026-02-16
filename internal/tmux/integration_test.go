@@ -44,7 +44,7 @@ func TestSessionLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read option: %v", err)
 	}
-	if strings.TrimSpace(value) != "1" {
+	if value != "1" {
 		t.Fatalf("expected option value, got %q", value)
 	}
 }
@@ -54,7 +54,7 @@ func cleanupSession(t *testing.T, name string) {
 	cmd := exec.Command("tmux", "kill-session", "-t", name)
 	if err := cmd.Run(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			stderr := strings.TrimSpace(string(exitErr.Stderr))
+			stderr := string(exitErr.Stderr)
 			if strings.Contains(stderr, "can't find session") {
 				return
 			}
