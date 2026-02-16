@@ -1,89 +1,111 @@
+// Package tmux wraps tmux interactions for treemux.
 package tmux
 
 import (
 	"fmt"
-	"io"
-	"os/exec"
+	"strings"
+
+	gotmux "github.com/jubnzv/go-tmux"
 )
 
+// Client provides tmux operations used by treemux.
 type Client struct {
-	Binary string
 }
 
+// New returns a new tmux client.
 func New() *Client {
-	return &Client{Binary: "tmux"}
+	return &Client{}
 }
 
-func (c *Client) HasSession(name string) bool {
-	// Use '=' to match the session name exactly, otherwise tmux will match any session that
-	// contains the name as a prefix.
-	return c.run(WithArgs("has-session", "-t", "="+name)) == nil
+// HasSession reports whether the named session exists.
+func (c *Client) HasSession(name string) (bool, error) {
+	args := []string{"has-session", "-t", "=" + name}
+	_, stderr, err := gotmux.RunCmd(args)
+	if err != nil {
+		if strings.Contains(stderr, "can't find session") {
+			return false, nil
+		}
+		if strings.Contains(stderr, "failed to connect to server") || strings.Contains(stderr, "no server running") {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
-func (c *Client) ShowOption(name string) (string, error) {
-	cmd := exec.Command(c.Binary, "show-option", "-qv", name)
-	output, err := cmd.Output()
+// ListSessions returns all session names.
+func (c *Client) ListSessions() ([]string, error) {
+	args := []string{"list-sessions", "-F", "#{session_name}"}
+	output, stderr, err := gotmux.RunCmd(args)
+	if err != nil {
+		if strings.Contains(stderr, "failed to connect to server") || strings.Contains(stderr, "no server running") {
+			return []string{}, nil
+		}
+		return nil, err
+	}
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	names := make([]string, 0, len(lines))
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		names = append(names, line)
+	}
+	return names, nil
+}
+
+// ShowOption reads a tmux option from the target session.
+func (c *Client) ShowOption(target, name string) (string, error) {
+	args := []string{"show-option", "-qv"}
+	if target != "" {
+		args = append(args, "-t", target)
+	}
+	args = append(args, name)
+	output, _, err := gotmux.RunCmd(args)
 	if err != nil {
 		return "", fmt.Errorf("failed to read tmux option %s", name)
 	}
-	return string(output), nil
+	return strings.TrimSpace(output), nil
 }
 
+// SetOption writes a tmux option for the target session.
 func (c *Client) SetOption(target, name, value string) error {
 	args := []string{"set-option", "-q"}
 	if target != "" {
 		args = append(args, "-t", target)
 	}
 	args = append(args, name, value)
-	return c.run(WithArgs(args...))
+	_, _, err := gotmux.RunCmd(args)
+	return err
 }
 
+// NewSession creates a detached tmux session.
 func (c *Client) NewSession(name, dir string, command []string) error {
 	args := []string{"new-session", "-d", "-s", name, "-c", dir}
 	if len(command) > 0 {
 		args = append(args, "--")
 		args = append(args, command...)
 	}
-	return c.run(WithArgs(args...))
+	_, _, err := gotmux.RunCmd(args)
+	return err
 }
 
-type runOptions struct {
-	args   []string
-	stdout io.Writer
-	stderr io.Writer
+// AttachOrSwitch attaches to or switches to the named session.
+func (c *Client) AttachOrSwitch(name string) error {
+	args := []string{"attach-session", "-t", name}
+	if gotmux.IsInsideTmux() {
+		args = []string{"switch-client", "-t", name}
+	}
+	return gotmux.ExecCmd(args)
 }
 
-type RunOpt func(*runOptions)
-
-func WithArgs(args ...string) RunOpt {
-	return func(opts *runOptions) {
-		opts.args = args
-	}
+// IsInsideTmux reports whether the current process runs inside tmux.
+func (c *Client) IsInsideTmux() bool {
+	return gotmux.IsInsideTmux()
 }
 
-func WithStdout(stdout io.Writer) RunOpt {
-	return func(opts *runOptions) {
-		opts.stdout = stdout
-	}
-}
-
-func WithStderr(stderr io.Writer) RunOpt {
-	return func(opts *runOptions) {
-		opts.stderr = stderr
-	}
-}
-
-func (c *Client) run(opts ...RunOpt) error {
-	options := &runOptions{}
-	for _, opt := range opts {
-		opt(options)
-	}
-	if len(options.args) == 0 {
-		return fmt.Errorf("missing tmux args")
-	}
-
-	cmd := exec.Command(c.Binary, options.args...)
-	cmd.Stdout = options.stdout
-	cmd.Stderr = options.stderr
-	return cmd.Run()
+// CurrentSessionName returns the attached tmux session name.
+func (c *Client) CurrentSessionName() (string, error) {
+	return gotmux.GetAttachedSessionName()
 }
