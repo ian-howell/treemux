@@ -16,7 +16,7 @@ func (a *App) AttachRoot(req AttachRootRequest) error {
 		return err
 	}
 	if req.Worktree != "" {
-		if _, err := resolveWorktree(req.Worktree, req.Dir); err != nil {
+		if _, err := resolveWorktree(req.Worktree); err != nil {
 			return err
 		}
 	}
@@ -79,7 +79,6 @@ func (a *App) AttachChild(req AttachChildRequest) error {
 		return fmt.Errorf("missing root metadata (%s) for session: %s", rootDirOption, rootName)
 	}
 
-	// TODO: Simplify this. I'm not convinced that resolceWorktree needs a dir argument
 	childDir := rootDir
 	childName := sanitizeSessionName(req.Name)
 	if childName == "" {
