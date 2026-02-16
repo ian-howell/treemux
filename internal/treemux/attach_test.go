@@ -41,6 +41,7 @@ func TestResolveRootDirDefaultsToWorktreePath(t *testing.T) {
 
 func TestResolveChildRootRequiresRootOutsideTmux(t *testing.T) {
 	app := New()
+	app.isInsideTmux = func() bool { return false }
 	root, err := app.resolveChildRoot("")
 	if err == nil {
 		t.Fatalf("expected error, got root %q", root)

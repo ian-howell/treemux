@@ -9,12 +9,18 @@ type App struct {
 	tmux *tmux.Client
 	// attach overrides session attachment for tests.
 	attach func(string) error
+	// isInsideTmux overrides tmux environment detection for tests.
+	isInsideTmux func() bool
+	// currentSessionName overrides tmux current session lookup for tests.
+	currentSessionName func() (string, error)
 }
 
 // New returns a new App instance.
 func New() *App {
 	app := &App{tmux: tmux.New()}
 	app.attach = app.tmux.AttachOrSwitch
+	app.isInsideTmux = app.tmux.IsInsideTmux
+	app.currentSessionName = app.tmux.CurrentSessionName
 	return app
 }
 

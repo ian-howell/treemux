@@ -118,10 +118,10 @@ func (a *App) resolveChildRoot(root string) (string, error) {
 	if rootName != "" {
 		return rootName, nil
 	}
-	if !a.tmux.IsInsideTmux() {
+	if !a.isInsideTmux() {
 		return "", fmt.Errorf("--root is required outside tmux")
 	}
-	current, err := a.tmux.CurrentSessionName()
+	current, err := a.currentSessionName()
 	if err != nil {
 		return "", err
 	}

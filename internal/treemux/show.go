@@ -64,8 +64,8 @@ func (a *App) ShowChildren(req ShowChildrenRequest) ([]string, error) {
 		return nil, fmt.Errorf("root session does not exist: %s", rootName)
 	}
 	currentSession := ""
-	if a.tmux.IsInsideTmux() {
-		currentSession, _ = a.tmux.CurrentSessionName()
+	if a.isInsideTmux() {
+		currentSession, _ = a.currentSessionName()
 		currentSession = strings.TrimSpace(currentSession)
 	}
 	childEntries := make([]sessionInfo, 0, len(children[rootName]))
@@ -127,8 +127,8 @@ func (a *App) collectSessions() (map[string]sessionInfo, map[string][]sessionInf
 		}
 	}
 	currentRoot := ""
-	if a.tmux.IsInsideTmux() {
-		currentSession, err := a.tmux.CurrentSessionName()
+	if a.isInsideTmux() {
+		currentSession, err := a.currentSessionName()
 		if err == nil {
 			currentSession = strings.TrimSpace(currentSession)
 			if currentSession != "" {
