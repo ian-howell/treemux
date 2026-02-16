@@ -48,7 +48,10 @@ func (a *App) AttachRoot(req AttachRootRequest) error {
 		}
 	}
 
-	return a.tmux.AttachOrSwitch(rootName)
+	if err := a.attach(rootName); err != nil {
+		return err
+	}
+	return setLastAttached(a.tmux, rootName)
 }
 
 // AttachChild ensures and attaches to a child session.
@@ -97,7 +100,13 @@ func (a *App) AttachChild(req AttachChildRequest) error {
 		}
 	}
 
-	return a.tmux.AttachOrSwitch(childSession)
+	if err := a.attach(childSession); err != nil {
+		return err
+	}
+	if err := setLastAttached(a.tmux, childSession); err != nil {
+		return err
+	}
+	return setLastAttached(a.tmux, rootName)
 }
 
 // resolveChildRoot determines the root session name for a child attach.

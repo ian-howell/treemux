@@ -16,31 +16,36 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// TestAttachOrSwitch validates attach/switch for a test session.
-func TestAttachOrSwitch(t *testing.T) {
+// TestSessionLifecycle validates tmux session operations without attaching.
+func TestSessionLifecycle(t *testing.T) {
 	client := New()
-	name := "treemux-test-attach"
+	name := "treemux-test-session"
 
 	cleanupSession(t, name)
 	if err := client.NewSession(name, os.TempDir(), nil); err != nil {
 		t.Fatalf("failed to create session: %v", err)
 	}
-	defer cleanupSession(t, name)
+	t.Cleanup(func() {
+		cleanupSession(t, name)
+	})
 
-	if err := client.AttachOrSwitch(name); err != nil {
-		t.Fatalf("attach/switch failed: %v", err)
-	}
-}
-
-// TestCurrentSessionName validates access to the attached session name.
-func TestCurrentSessionName(t *testing.T) {
-	client := New()
-	name, err := client.CurrentSessionName()
+	exists, err := client.HasSession(name)
 	if err != nil {
-		t.Fatalf("failed to get current session name: %v", err)
+		t.Fatalf("failed to check session: %v", err)
 	}
-	if strings.TrimSpace(name) == "" {
-		t.Fatalf("expected current session name, got empty")
+	if !exists {
+		t.Fatalf("expected session to exist")
+	}
+
+	if err := client.SetOption(name, "@treemux_test", "1"); err != nil {
+		t.Fatalf("failed to set option: %v", err)
+	}
+	value, err := client.ShowOption(name, "@treemux_test")
+	if err != nil {
+		t.Fatalf("failed to read option: %v", err)
+	}
+	if strings.TrimSpace(value) != "1" {
+		t.Fatalf("expected option value, got %q", value)
 	}
 }
 

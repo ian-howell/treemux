@@ -1,6 +1,9 @@
 package treemux
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestResolveRootDirPrefersDir(t *testing.T) {
 	app := New()
@@ -14,6 +17,17 @@ func TestResolveRootDirPrefersDir(t *testing.T) {
 }
 
 func TestResolveRootDirDefaultsToWorktreePath(t *testing.T) {
+	repo := newTestRepo(t)
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get cwd: %v", err)
+	}
+	if err := os.Chdir(repo); err != nil {
+		t.Fatalf("failed to chdir: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(cwd)
+	})
 	app := New()
 	result, err := app.resolveRootDir("", "main")
 	if err != nil {

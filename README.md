@@ -14,8 +14,10 @@ treemux --help
 Usage: treemux <command>
 
 Commands:
-  attach    Attach to a tmux session, creating it if it doesn't exist.
-  show      Show a list of treemux sessions.
+  attach-root     Attach to a root session, creating it if it doesn't exist.
+  attach-child    Attach to a child session rooted at the specified root.
+  show-roots      Show a list of treemux root sessions.
+  show-children   Show child sessions for a root.
 
 Run "treemux <command> --help" for more information.
 ```
@@ -59,25 +61,39 @@ ARGS
 `--cmd <command>`:                        Command to run in the session. If not specified, the
                                           session will start with the default shell.
 
-### show
+### show-roots
 
-Prints a fzf-friendly list of tmux sessions, with root sessions and their child sessions grouped
-together.
+Prints a list of treemux root sessions. The current root is prefixed with `*`. Use `--hide-current`
+to omit the current root. Use `--sort-by=most-recently-used` to order by most recently attached.
 
 NOTE: treemux only shows sessions it manages (sessions with treemux metadata).
 
 Example output:
 
 ```
-root-a
-root-a  child-1
-root-a  child-2
-root-b
-root-b  child-1
+* root-a
+  root-b
 ```
 
-Example usage:
+### show-children
+
+Prints child sessions for a root. The current session is prefixed with `*`. If `--root` is omitted
+inside tmux, treemux defaults to the current session's root. Use `--hide-current` to omit the
+current session. Use `--sort-by=most-recently-used` to order by most recently attached.
+
+Example output:
 
 ```
-child_of_a=$(treemux show | awk '/^root-a/ {print $2}' | fzf)
+  root-a
+  child-1
+  child-2
+* child-3
+```
+
+## Integration tests
+
+Integration tests require a tmux session. Run them from inside tmux:
+
+```
+TREEMUX_TMUX=1 go test ./...
 ```
