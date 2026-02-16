@@ -1,6 +1,7 @@
 package treemux
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -116,7 +117,7 @@ func hasLocalBranch(repoRoot, branch string) (bool, error) {
 	cmd := exec.Command("git", "show-ref", "--verify", "refs/heads/"+branch)
 	cmd.Dir = repoRoot
 	if err := cmd.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
 			stderr := string(exitErr.Stderr)
 			if strings.Contains(stderr, "not a valid ref") || strings.Contains(stderr, "fatal") {
 				return false, nil
@@ -137,7 +138,7 @@ func runGit(dir string, args ...string) error {
 		"GIT_COMMITTER_EMAIL=treemux@example.com",
 	)
 	if err := cmd.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
 			stderr := string(exitErr.Stderr)
 			if stderr != "" {
 				return fmt.Errorf("git %s: %s", strings.Join(args, " "), stderr)

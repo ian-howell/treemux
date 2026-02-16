@@ -2,6 +2,7 @@
 package tmux
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"strings"
@@ -53,7 +54,7 @@ func TestSessionLifecycle(t *testing.T) {
 func cleanupSession(t *testing.T, name string) {
 	cmd := exec.Command("tmux", "kill-session", "-t", name)
 	if err := cmd.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
 			stderr := string(exitErr.Stderr)
 			if strings.Contains(stderr, "can't find session") {
 				return
