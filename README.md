@@ -16,9 +16,6 @@ ARGS
 `--name <root-name>`:                     Root session name. If not specified, it is derived from
                                           the session directory.
 
-`--cmd <command>`:                        Command to run in the session. If not specified, the
-                                          session will start with the default shell.
-
 `-d --dir <directory>`:                   Starting directory for the session. If not specified, it
                                           uses the current directory.
 

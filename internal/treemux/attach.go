@@ -37,7 +37,7 @@ func (a *App) AttachRoot(req AttachRootRequest) error {
 		return err
 	}
 	if !exists {
-		if err := a.tmux.NewSession(rootName, rootDir, commandArgs(req.Command)); err != nil {
+		if err := a.tmux.NewSession(rootName, rootDir, nil); err != nil {
 			return fmt.Errorf("failed to create tmux session '%s': %w", rootName, err)
 		}
 		if err := a.tmux.SetOption(rootName, rootNameOption, rootName); err != nil {

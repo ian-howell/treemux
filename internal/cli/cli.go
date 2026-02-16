@@ -24,8 +24,6 @@ type CLI struct {
 type AttachRootCmd struct {
 	// Name is the name for the root session.
 	Name string `name:"name" help:"Root session name."`
-	// Command is the command to run in the session.
-	Command string `name:"cmd" help:"Command to run in the session."`
 	// Dir sets the session start directory.
 	Dir string `name:"dir" short:"d" help:"Starting directory for the session."`
 	// Worktree selects a git worktree branch.
@@ -70,7 +68,6 @@ func Run() error {
 	case "attach-root":
 		return app.AttachRoot(treemux.AttachRootRequest{
 			Name:     cli.AttachRoot.Name,
-			Command:  cli.AttachRoot.Command,
 			Dir:      cli.AttachRoot.Dir,
 			Worktree: cli.AttachRoot.Worktree,
 		})

@@ -22,8 +22,6 @@ func New() *App {
 type AttachRootRequest struct {
 	// Name specifies the root session name.
 	Name string
-	// Command specifies a command to run in the session.
-	Command string
 	// Dir sets the session start directory.
 	Dir string
 	// Worktree selects a git worktree branch.
