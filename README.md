@@ -1,177 +1,104 @@
 # treemux
 
-`treemux` is a small tmux session helper for root/child session trees. It provides commands to manage
-tmux sessions in a hierarchical manner, allowing you to organize your sessions based on their root
-directories.
+treemux is a tmux session selector with a small, composable core. The runtime is built around three
+roles: listers that discover sessions, prompters that present choices, and attachers that join the
+selected session. Each role is a narrow interface so new behaviors can be added without rewriting
+the rest of the system.
 
-## Commands
+## Architecture overview
 
-### attach-root
+treemux flows through a simple pipeline:
 
-Attach to a root tmux session, creating it if it doesn't exist. Works from both inside and outside
-of tmux sessions.
+1. The CLI wires dependencies and constructs the app.
+2. Listers return candidate sessions.
+3. The prompter renders a selection UI and returns a chosen session.
+4. The chosen session attaches through its attacher.
 
-ARGS
+Most of the code lives under `internal/` and is intentionally split by role. The app only cares
+about interfaces, so the wiring in `internal/cli` is the main place where implementations are
+selected.
 
-`--name <root-name>`:                     Root session name. If not specified, it is derived from
-                                          the session directory.
+## Listers
 
-`-d --dir <directory>`:                   Starting directory for the session. Mutually exclusive
-                                          with `-w --worktree`. If not specified, it uses the
-                                          current directory.
+Listers enumerate sessions and return a slice of `treemux.Session`. They can draw from tmux state,
+local metadata, or other sources without forcing the UI or attach logic to change.
 
-`-w --worktree <worktree/branch>`:        Mutually exclusive with `-d --dir`. If specified, the
-                                          session will be rooted at the given git worktree
-                                          directory. If the worktree did not exist for the
-                                          specified branch, it will be created. The default root
-                                          directory is `<repo>/.worktrees/<branch>`.
+Contract:
 
-### attach-child
+- `List() ([]treemux.Session, error)` returns sessions ready to display.
+- Each session includes metadata for prompt display (name, last attached time, attached state).
 
-Attach to a child tmux session rooted at the specified root session, creating it if it doesn't
-exist. Works from both inside and outside of tmux sessions. Child sessions always use the root
-session directory.
+Current implementation:
 
-ARGS
+- `internal/listers/active_sessions.go` uses `tmux list-sessions` to collect active sessions and
+  populate the core session model.
 
-`--root <root-name>`:                     Root session name. If omitted inside tmux, treemux
-                                          defaults to the current session's root.
+Design notes:
 
-`--name <child-name>`:                    Child session name.
+- Listers can return overlapping sessions; the app currently does not deduplicate.
+- Listers are expected to tolerate tmux not running and return an empty list rather than failing.
 
-`--cmd <command>`:                        Command to run in the session. If not specified, the
-                                          session will start with the default shell.
+## Prompters
 
-### show-roots
+Prompters present the session list and return a single `treemux.Session` selection. They should
+focus on user interaction only, and avoid tmux-specific logic.
 
-Prints a list of treemux root sessions. The current root is prefixed with `*`. Use `--hide-current`
-to omit the current root. Use `--sort-by=most-recently-used` to order by most recently attached.
+Contract:
 
-NOTE: treemux only shows sessions it manages (sessions with treemux metadata).
+- `Prompt([]treemux.Session) (treemux.Session, error)` returns the chosen session.
+- If no sessions are available, the prompter should return a clear error.
 
-Example output:
+Current implementation:
 
-```
-* root-a
-  root-b
-```
+- `internal/prompters/huh.go` uses `github.com/charmbracelet/huh` to render a TUI selection list.
+  Attached sessions are prefixed with `* ` in the label.
 
-### show-children
+Design notes:
 
-Prints child sessions for a root. The current session is prefixed with `*`. If `--root` is omitted
-inside tmux, treemux defaults to the current session's root. Use `--hide-current` to omit the
-current session. Use `--sort-by=most-recently-used` to order by most recently attached.
+- Prompt cancellation is treated as a clean error (`prompt canceled`).
+- The prompter is configured in `internal/cli/cli.go` via `treemux.WithPrompter`.
 
-Example output:
+## Attachers
 
-```
-  child-1
-  child-2
-* child-3
-```
+Attachers connect to the chosen session. The core `treemux.Session` embeds an `Attacher` interface,
+so a lister can return sessions that know how to attach themselves.
 
-## Examples
+Contract:
 
-From `~/src/tools`, attach a root (root dir `~/src/tools`; session name `tools`):
+- `Attach() error` joins or switches to the session.
+- Attachers should be safe to call even if the session is already attached.
 
-```
-treemux attach-root
-```
+Current state:
 
-From `~/src/tools`, attach with explicit name (root dir `~/src/tools`; session name `work`):
+- The active sessions lister does not yet populate a concrete attacher. The interface exists so
+  session models can carry attach behavior when implementations are added.
 
-```
-treemux attach-root --name work
-```
+## Data flow
 
-Attach with explicit directory (root dir `~/src/tools`; session name `tools`):
+The app assembles dependencies in the CLI and runs a short-lived pipeline:
 
-```
-treemux attach-root -d ~/src/tools
-```
+1. `treemux.New(...)` initializes the app with listers and a prompter.
+2. `List()` is called on each lister and results are concatenated.
+3. The prompter returns a `treemux.Session`.
+4. `Session.Attach()` is invoked on the chosen session.
 
-Attach with explicit name and directory (root dir `~/src/tools`; session name `work`):
+Errors bubble up with context, so callers can report where the pipeline failed.
 
-```
-treemux attach-root --name work -d ~/src/tools
-```
+## Extensibility
 
-Attach for a worktree (root dir `<repo>/.worktrees/feature-x`; session name `feature-x`):
+Adding new behavior typically means implementing one of the role interfaces and wiring it in the
+CLI. For example, a future lister could provide session metadata from a config file, while a new
+prompter might render a different TUI or a non-interactive selector.
+
+## Development
+
+Run tests:
 
 ```
-treemux attach-root -w feature-x
+go test ./...
 ```
 
-Attach for a worktree with explicit name (root dir `<repo>/.worktrees/feature-x`; session name `work`):
-
-```
-treemux attach-root --name work -w feature-x
-```
-
-Invalid: worktree and dir together (fails with `--dir and --worktree are mutually exclusive`):
-
-```
-treemux attach-root -d ~/src/tools -w feature-x
-```
-
-Attach a child inside tmux (root session and cwd derived from current session; child name `nvim`):
-
-```
-treemux attach-child --name nvim
-```
-
-Attach a child outside tmux (root session `tools`; child name `nvim`):
-
-```
-treemux attach-child --root tools --name nvim
-```
-
-Show roots with default sort (alphabetic by name):
-
-```
-treemux show-roots
-```
-
-Example output:
-
-```
-  alpha
-* beta
-  charlie
-  delta
-```
-
-Show roots ordered by most recently used (`*` marks current root):
-
-```
-treemux show-roots --sort-by=most-recently-used
-```
-
-Example output:
-
-```
-* delta    # most recent
-  alpha    # 2nd
-  charlie  # 3rd
-  beta     # 4th
-```
-
-Show children for a root while hiding the current session (`*` marks current session):
-
-```
-treemux show-children --root tools --hide-current
-```
-
-Example output:
-
-```
-  nvim
-  logs
-```
-
-## Integration tests
-
-Integration tests require a tmux session. Run them from inside tmux:
+Integration tests require tmux and must be run inside tmux:
 
 ```
 TREEMUX_TMUX=1 go test ./...
