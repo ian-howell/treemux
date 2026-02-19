@@ -51,6 +51,12 @@ func WithSessionizers(sessionizers []Sessionizer) Option {
 	}
 }
 
+func WithPrompter(prompter prompter) Option {
+	return func(app *App) {
+		app.prompter = prompter
+	}
+}
+
 // New returns a new App instance.
 func New(opts ...Option) *App {
 	app := &App{}
@@ -63,6 +69,10 @@ func New(opts ...Option) *App {
 }
 
 func (a *App) Run() error {
+	if a.prompter == nil {
+		return fmt.Errorf("no prompter configured")
+	}
+
 	sessions, err := a.listSessions()
 	if err != nil {
 		return fmt.Errorf("failed to list sessions: %w", err)
