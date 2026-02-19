@@ -17,16 +17,12 @@ type Attacher interface {
 	Attach() error
 }
 
-type SessionLister interface {
-	List() ([]Session, error)
-}
-
 type SesssionAttacher interface {
 	Attach(name string) error
 }
 
-type Sessionizer interface {
-	SessionLister
+type Lister interface {
+	List() ([]Session, error)
 	SesssionAttacher
 }
 
@@ -36,8 +32,8 @@ type prompter interface {
 
 // App bundles core treemux dependencies.
 type App struct {
-	// sessionizers provide sessions to display and attach to.
-	sessionizers []Sessionizer
+	// listers provide sessions to display and attach to.
+	listers []Lister
 
 	// prompter provides session selection UI.
 	prompter prompter
@@ -45,9 +41,9 @@ type App struct {
 
 type Option func(*App)
 
-func WithSessionizers(sessionizers []Sessionizer) Option {
+func WithListers(listers []Lister) Option {
 	return func(app *App) {
-		app.sessionizers = sessionizers
+		app.listers = listers
 	}
 }
 
@@ -93,8 +89,8 @@ func (a *App) Run() error {
 func (a *App) listSessions() ([]Session, error) {
 	// TODO: Handle duplicates and sorting
 	var allSessions []Session
-	for _, sessionizer := range a.sessionizers {
-		sessions, err := sessionizer.List()
+	for _, lister := range a.listers {
+		sessions, err := lister.List()
 		if err != nil {
 			return nil, err
 		}

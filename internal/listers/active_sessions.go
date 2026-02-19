@@ -1,4 +1,4 @@
-package sessionizers
+package listers
 
 import (
 	"fmt"
