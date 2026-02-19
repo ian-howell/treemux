@@ -84,12 +84,8 @@ func (c *Client) SetOption(target, name, value string) error {
 }
 
 // NewSession creates a detached tmux session.
-func (c *Client) NewSession(name, dir string, command []string) error {
-	args := []string{"new-session", "-d", "-s", name, "-c", dir}
-	if len(command) > 0 {
-		args = append(args, "--")
-		args = append(args, command...)
-	}
+func (c *Client) NewSession(name, dir string, command string) error {
+	args := []string{"new-session", "-d", "-s", name, "-c", dir, "--", command}
 	_, _, err := gotmux.RunCmd(args)
 	return err
 }

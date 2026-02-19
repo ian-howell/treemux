@@ -102,7 +102,7 @@ func (a *App) AttachChild(req AttachChildRequest) error {
 		return err
 	}
 	if !exists {
-		if err := a.tmux.NewSession(childSession, childDir, commandArgs(req.Command)); err != nil {
+		if err := a.tmux.NewSession(childSession, childDir, req.Command); err != nil {
 			return fmt.Errorf("failed to create child tmux session '%s': %w", childSession, err)
 		}
 		if err := a.tmux.SetOption(childSession, rootNameOption, rootName); err != nil {
@@ -165,12 +165,4 @@ func (a *App) resolveRootDir(dir, worktree string) (string, error) {
 		return "", fmt.Errorf("failed to get current directory: %w", err)
 	}
 	return cwd, nil
-}
-
-// commandArgs builds a command invocation for tmux.
-func commandArgs(command string) []string {
-	if command == "" {
-		return nil
-	}
-	return []string{"sh", "-lc", command}
 }
