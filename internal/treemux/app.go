@@ -17,13 +17,8 @@ type Attacher interface {
 	Attach() error
 }
 
-type SesssionAttacher interface {
-	Attach(name string) error
-}
-
 type Lister interface {
 	List() ([]Session, error)
-	SesssionAttacher
 }
 
 type prompter interface {

@@ -37,16 +37,22 @@ func (s *ActiveSessions) List() ([]treemux.Session, error) {
 		var attachedStr string
 		fmt.Sscanf(line, "%s %d %s", &name, &lastAttachedTime, &attachedStr)
 		attached := attachedStr == "true"
-		sessions = append(sessions, treemux.Session{Session: models.Session{
-			Name:             name,
-			LastAttachedTime: lastAttachedTime,
-			Attached:         attached,
-		}})
+		sessions = append(sessions, treemux.Session{
+			Attacher: &ActiveSessionAttacher{tmuxClient: s.tmuxClient},
+			Session: models.Session{
+				Name:             name,
+				LastAttachedTime: lastAttachedTime,
+				Attached:         attached,
+			},
+		})
 	}
 	return sessions, nil
 }
 
-// Attach attaches to the specified session. If the session is already attached, it will do nothing.
-func (s *ActiveSessions) Attach(name string) error {
+type ActiveSessionAttacher struct {
+	tmuxClient tmuxClient
+}
+
+func (a *ActiveSessionAttacher) Attach() error {
 	return nil
 }
