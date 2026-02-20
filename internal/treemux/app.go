@@ -54,21 +54,25 @@ func WithPrompter(prompter prompter) Option {
 }
 
 // New returns a new App instance.
-func New(opts ...Option) *App {
+func New(opts ...Option) (*App, error) {
 	app := &App{}
 
 	for _, opt := range opts {
 		opt(app)
 	}
 
-	return app
+	if app.prompter == nil {
+		return nil, fmt.Errorf("no prompter configured")
+	}
+
+	if len(app.listers) == 0 {
+		return nil, fmt.Errorf("no listers configured")
+	}
+
+	return app, nil
 }
 
 func (a *App) Run() error {
-	if a.prompter == nil {
-		return fmt.Errorf("no prompter configured")
-	}
-
 	sessions, err := a.listSessions()
 	if err != nil {
 		return fmt.Errorf("failed to list sessions: %w", err)

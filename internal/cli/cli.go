@@ -4,6 +4,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/ian-howell/treemux/internal/listers"
 	"github.com/ian-howell/treemux/internal/prompters"
 	"github.com/ian-howell/treemux/internal/tmux"
@@ -14,10 +16,14 @@ import (
 func Run(config Config) error {
 	// TODO: Handle config
 	tmuxClient := tmux.New()
-	return treemux.New(
+	app, err := treemux.New(
 		treemux.WithPrompter(prompters.NewHuh()),
 		treemux.WithListers([]treemux.Lister{
 			listers.NewActiveSessions(tmuxClient),
 		}),
-	).Run()
+	)
+	if err != nil {
+		return fmt.Errorf("creating app: %w", err)
+	}
+	return app.Run()
 }
