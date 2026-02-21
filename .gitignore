@@ -1,0 +1,2 @@
+# ignore files name "treemux", but not directories named "treemux"
+/treemux
