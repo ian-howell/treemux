@@ -3,9 +3,11 @@ package prompters
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/x/term"
 
 	"github.com/ian-howell/treemux/internal/treemux"
 )
@@ -49,6 +51,8 @@ func (p *Huh) Prompt(sessions []treemux.Session) (treemux.Session, error) {
 		),
 	)
 
+	form = form.WithWidth(screenWidth()).WithHeight(screenHeight())
+
 	keymap := huh.NewDefaultKeyMap()
 	keymap.Quit = key.NewBinding(key.WithKeys(
 		"ctrl+c",
@@ -66,4 +70,24 @@ func (p *Huh) Prompt(sessions []treemux.Session) (treemux.Session, error) {
 	}
 
 	return selected.session, nil
+}
+
+// screenWidth returns the width of the terminal screen. If it cannot be determined, it returns a default width.
+func screenWidth() int {
+	// Huh uses stderr for its output, so we get the terminal size from stderr.
+	width, _, err := term.GetSize(os.Stderr.Fd())
+	if err != nil || width <= 0 {
+		return 0
+	}
+	return width
+}
+
+// screenHeight returns the height of the terminal screen. If it cannot be determined, it returns a default height.
+func screenHeight() int {
+	// Huh uses stderr for its output, so we get the terminal size from stderr.
+	_, height, err := term.GetSize(os.Stderr.Fd())
+	if err != nil || height <= 0 {
+		return 0
+	}
+	return height
 }
