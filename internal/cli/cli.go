@@ -17,7 +17,9 @@ func Run(config Config) error {
 	// TODO: Handle config
 	tmuxClient := tmux.New()
 	app, err := treemux.New(
-		treemux.WithPrompter(prompters.NewHuh()),
+		treemux.WithPrompter(&prompters.Huh{
+			FullScreen: config.FullScreen,
+		}),
 		treemux.WithListers([]treemux.Lister{
 			listers.NewActiveSessions(tmuxClient),
 		}),

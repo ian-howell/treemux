@@ -19,18 +19,22 @@ func main() {
 
 // run executes the treemux CLI and returns any errors encountered.
 func run() error {
-	var configFilePatch string
-	flag.StringVar(&configFilePatch, "config-file", "", "Path to a treemux configuration file.")
+	var (
+		// configFilePath = flag.String("config-file", "", "Path to a treemux configuration file.")
+		useFullscreen = flag.Bool("fullscreen", false, "Whether to use full-screen mode for the prompter.")
+	)
 	flag.Parse()
 
-	var config cli.Config
-	if configFilePatch != "" {
-		var err error
-		config, err = cli.LoadConfig(configFilePatch)
-		if err != nil {
-			return fmt.Errorf("loading config: %w", err)
-		}
+	config := cli.Config{
+		FullScreen: *useFullscreen,
 	}
+	// if *configFilePath != "" {
+	// 	var err error
+	// 	config, err = cli.LoadConfig(configFilePatch)
+	// 	if err != nil {
+	// 		return fmt.Errorf("loading config: %w", err)
+	// 	}
+	// }
 
 	if err := cli.Run(config); err != nil {
 		return fmt.Errorf("running treemux: %w", err)

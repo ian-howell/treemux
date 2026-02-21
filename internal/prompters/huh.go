@@ -12,7 +12,9 @@ import (
 	"github.com/ian-howell/treemux/internal/treemux"
 )
 
-type Huh struct{}
+type Huh struct {
+	FullScreen bool
+}
 
 type sessionChoice struct {
 	label   string
@@ -21,10 +23,6 @@ type sessionChoice struct {
 
 func (c sessionChoice) String() string {
 	return c.label
-}
-
-func NewHuh() *Huh {
-	return &Huh{}
 }
 
 func (p *Huh) Prompt(sessions []treemux.Session) (treemux.Session, error) {
@@ -51,7 +49,9 @@ func (p *Huh) Prompt(sessions []treemux.Session) (treemux.Session, error) {
 		),
 	)
 
-	form = form.WithWidth(screenWidth()).WithHeight(screenHeight())
+	if p.FullScreen {
+		form = form.WithWidth(screenWidth()).WithHeight(screenHeight())
+	}
 
 	keymap := huh.NewDefaultKeyMap()
 	keymap.Quit = key.NewBinding(key.WithKeys(

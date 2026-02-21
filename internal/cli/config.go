@@ -9,7 +9,8 @@ import (
 
 // Config holds treemux configuration options.
 type Config struct {
-	// TODO
+	// FullScreen determines whether the prompter should be displayed in full-screen mode.
+	FullScreen bool
 }
 
 // LoadConfig loads treemux configuration from the specified file path.
