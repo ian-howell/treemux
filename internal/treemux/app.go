@@ -14,6 +14,8 @@ type Lister interface {
 	List() ([]Session, error)
 }
 
+// The prompter is needed to provide a UI for the user to select a Session.
+// Callers should assume that a returned nil Session implies that the user canceled the prompt
 type prompter interface {
 	Prompt(sessions []Session) (Session, error)
 }
@@ -69,6 +71,10 @@ func (a *App) Run() error {
 	session, err := a.prompter.Prompt(sessions)
 	if err != nil {
 		return fmt.Errorf("failed to prompt for session: %w", err)
+	}
+	if session == nil {
+		// Assume that the user cancelled the selection
+		return nil
 	}
 
 	if err := session.Attach(); err != nil {

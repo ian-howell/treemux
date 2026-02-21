@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/huh"
+
 	"github.com/ian-howell/treemux/internal/treemux"
 )
 
@@ -47,9 +49,18 @@ func (p *Huh) Prompt(sessions []treemux.Session) (treemux.Session, error) {
 		),
 	)
 
+	keymap := huh.NewDefaultKeyMap()
+	keymap.Quit = key.NewBinding(key.WithKeys(
+		"ctrl+c",
+		"esc",
+	))
+	form = form.WithKeyMap(keymap)
+
 	if err := form.Run(); err != nil {
 		if errors.Is(err, huh.ErrUserAborted) {
-			return nil, fmt.Errorf("prompt canceled")
+			// If the user aborted, send a nil Session with a nil err to indicate that
+			// no selection was made.
+			return nil, nil
 		}
 		return nil, err
 	}
