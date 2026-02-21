@@ -2,6 +2,7 @@ package listers
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/ian-howell/treemux/internal/models"
@@ -10,6 +11,7 @@ import (
 
 type tmuxClient interface {
 	RunCmd(args []string) (stdout string, err error)
+	AttachOrSwitch(name string) error
 }
 
 type ActiveSessions struct {
@@ -30,15 +32,15 @@ func (s *ActiveSessions) List() ([]treemux.Session, error) {
 	}
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 
-	sessions := make([]treemux.Session, 0, len(lines))
+	sessions := make([]ActiveSession, 0, len(lines))
 	for _, line := range lines {
 		var name string
 		var lastAttachedTime int64
 		var attachedStr string
 		fmt.Sscanf(line, "%s %d %s", &name, &lastAttachedTime, &attachedStr)
 		attached := attachedStr == "true"
-		sessions = append(sessions, treemux.Session{
-			Attacher: &ActiveSessionAttacher{tmuxClient: s.tmuxClient},
+		sessions = append(sessions, ActiveSession{
+			tmuxClient: s.tmuxClient,
 			Session: models.Session{
 				Name:             name,
 				LastAttachedTime: lastAttachedTime,
@@ -46,13 +48,33 @@ func (s *ActiveSessions) List() ([]treemux.Session, error) {
 			},
 		})
 	}
-	return sessions, nil
+
+	sort.Slice(sessions, func(i, j int) bool {
+		return sessions[i].Session.LastAttachedTime > sessions[j].Session.LastAttachedTime
+	})
+
+	treemuxSessions := make([]treemux.Session, 0, len(sessions))
+	for _, session := range sessions {
+		treemuxSessions = append(treemuxSessions, session)
+	}
+
+	return treemuxSessions, nil
 }
 
-type ActiveSessionAttacher struct {
+type ActiveSession struct {
 	tmuxClient tmuxClient
+	Session    models.Session
 }
 
-func (a *ActiveSessionAttacher) Attach() error {
-	return nil
+// Attach attaches to the session, creating it if it doesn't exist.
+func (a ActiveSession) Attach() error {
+	return a.tmuxClient.AttachOrSwitch(a.Session.Name)
+}
+
+// String returns the session as a string for display in a prompter.
+func (a ActiveSession) String() string {
+	if a.Session.Attached {
+		return fmt.Sprintf("* %s", a.Session.Name)
+	}
+	return fmt.Sprintf("  %s", a.Session.Name)
 }

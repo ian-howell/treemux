@@ -3,18 +3,11 @@ package treemux
 
 import (
 	"fmt"
-
-	"github.com/ian-howell/treemux/internal/models"
 )
 
-type Session struct {
-	Attacher
-
-	models.Session
-}
-
-type Attacher interface {
+type Session interface {
 	Attach() error
+	fmt.Stringer
 }
 
 type Lister interface {

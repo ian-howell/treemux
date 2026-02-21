@@ -25,17 +25,12 @@ func NewHuh() *Huh {
 
 func (p *Huh) Prompt(sessions []treemux.Session) (treemux.Session, error) {
 	if len(sessions) == 0 {
-		return treemux.Session{}, fmt.Errorf("no sessions available")
+		return nil, fmt.Errorf("no sessions available")
 	}
 
 	choices := make([]huh.Option[sessionChoice], 0, len(sessions))
 	for _, session := range sessions {
-		label := session.Name
-		if session.Attached {
-			label = "* " + label
-		} else {
-			label = "  " + label
-		}
+		label := session.String()
 		choices = append(choices, huh.NewOption(label, sessionChoice{
 			label:   label,
 			session: session,
@@ -54,9 +49,9 @@ func (p *Huh) Prompt(sessions []treemux.Session) (treemux.Session, error) {
 
 	if err := form.Run(); err != nil {
 		if errors.Is(err, huh.ErrUserAborted) {
-			return treemux.Session{}, fmt.Errorf("prompt canceled")
+			return nil, fmt.Errorf("prompt canceled")
 		}
-		return treemux.Session{}, err
+		return nil, err
 	}
 
 	return selected.session, nil
